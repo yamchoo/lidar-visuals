@@ -1,0 +1,16 @@
+{
+  "pipeline": [
+    "/Users/amy/repo-depo/lidar-visuals/public/data/bc_dsm_v12.laz",
+    {
+      "type": "filters.crop",
+      "bounds": "([489085.37, 489995.95], [5456645.78, 5458038.34])"
+    },
+    {
+      "type": "writers.las",
+      "compression": "laszip",
+      "minor_version": 2,
+      "dataformat_id": 3,
+      "filename": "/Users/amy/repo-depo/lidar-visuals/public/data/bc_dsm_v12_west.laz"
+    }
+  ]
+}

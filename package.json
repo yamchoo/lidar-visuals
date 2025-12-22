@@ -1,0 +1,21 @@
+{
+  "name": "lidar-visuals",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@loaders.gl/core": "^4.3.4",
+    "@loaders.gl/las": "^4.3.4",
+    "@tweenjs/tween.js": "^25.0.0",
+    "potree-core": "^2.0.3",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.1"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "pipeline": [
+    "/Users/amy/repo-depo/lidar-visuals/public/data/bc_092g025_3_4_3_xyes_8_utm10_20170601_dsm.laz",
+    {
+      "type": "filters.crop",
+      "bounds": "([489697.64, 490304.39], [5459424.79, 5460817.67])"
+    },
+    {
+      "type": "writers.las",
+      "compression": "laszip",
+      "minor_version": 2,
+      "dataformat_id": 3,
+      "filename": "/Users/amy/repo-depo/lidar-visuals/public/data/bc_092g025_3_4_3_middle.laz"
+    }
+  ]
+}
