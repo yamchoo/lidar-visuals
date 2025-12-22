@@ -26,4 +26,8 @@ dist-ssr
 # LiDAR data (large files)
 public/data/*.laz
 public/data/*.las
+public/data/*.ply
 public/data/*.copc
+
+# Playwright screenshots
+.playwright-mcp/
