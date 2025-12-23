@@ -1,0 +1,9 @@
+# Exclude large LIDAR data files from deployment
+# These are hosted on Vercel Blob instead
+public/data/*.laz
+public/data/*.las
+public/data/*.ply
+public/data/*.copc
+
+# Exclude Playwright screenshots
+.playwright-mcp/
