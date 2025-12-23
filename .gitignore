@@ -31,3 +31,6 @@ public/data/*.copc
 
 # Playwright screenshots
 .playwright-mcp/
+
+# Vercel Blob upload artifacts
+blob-urls.json

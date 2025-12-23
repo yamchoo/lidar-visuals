@@ -7,6 +7,7 @@ import { CameraPathManager } from './animation/CameraPathManager.js';
 import { ControlPanel } from './ui/ControlPanel.js';
 import { PerformanceMonitor } from './utils/PerformanceMonitor.js';
 import { ViewpointManager } from './utils/ViewpointManager.js';
+import { getDataUrl } from './config/blobUrls.js';
 import './ui/styles.css';
 
 class LiDARVisualizer {
@@ -134,22 +135,22 @@ class LiDARVisualizer {
     // Configure files to load
     // Twelve tiles total (all large files split for memory management):
     const filesToLoad = [
-      '/data/bc_092g025_3_4_1_west.laz',    // Tile 3_4_1 west (30MB)
-      '/data/bc_092g025_3_4_1_east.laz',    // Tile 3_4_1 east (61MB)
-      '/data/bc_092g025_3_4_2_west.laz',    // Tile 3_4_2 west (52MB)
-      '/data/bc_092g025_3_4_2_east.laz',    // Tile 3_4_2 east (39MB)
-      '/data/bc_092g025_3_4_3_west.laz',    // Tile 3_4_3 west (71MB)
-      '/data/bc_092g025_3_4_3_middle.laz',  // Tile 3_4_3 middle (68MB)
-      '/data/bc_092g025_3_4_3_east.laz',    // Tile 3_4_3 east (50MB)
-      '/data/bc_092g025_3_4_4_xyes_8_utm10_20170601_dsm.laz',  // Tile 3_4_4 (30MB)
-      '/data/bc_dsm_v12_west.laz',          // Original tile west (49MB)
-      '/data/bc_dsm_v12_east.laz',          // Original tile east (41MB)
-      '/data/bc_092g025_3_2_4_west.laz',    // Tile 3_2_4 west (42MB)
-      '/data/bc_092g025_3_2_4_east.laz'     // Tile 3_2_4 east (42MB)
+      getDataUrl('bc_092g025_3_4_1_west.laz'),    // Tile 3_4_1 west (30MB)
+      getDataUrl('bc_092g025_3_4_1_east.laz'),    // Tile 3_4_1 east (61MB)
+      getDataUrl('bc_092g025_3_4_2_west.laz'),    // Tile 3_4_2 west (52MB)
+      getDataUrl('bc_092g025_3_4_2_east.laz'),    // Tile 3_4_2 east (39MB)
+      getDataUrl('bc_092g025_3_4_3_west.laz'),    // Tile 3_4_3 west (71MB)
+      getDataUrl('bc_092g025_3_4_3_middle.laz'),  // Tile 3_4_3 middle (68MB)
+      getDataUrl('bc_092g025_3_4_3_east.laz'),    // Tile 3_4_3 east (50MB)
+      getDataUrl('bc_092g025_3_4_4_xyes_8_utm10_20170601_dsm.laz'),  // Tile 3_4_4 (30MB)
+      getDataUrl('bc_dsm_v12_west.laz'),          // Original tile west (49MB)
+      getDataUrl('bc_dsm_v12_east.laz'),          // Original tile east (41MB)
+      getDataUrl('bc_092g025_3_2_4_west.laz'),    // Tile 3_2_4 west (42MB)
+      getDataUrl('bc_092g025_3_2_4_east.laz')     // Tile 3_2_4 east (42MB)
     ];
 
     // Single file (for testing):
-    // const filesToLoad = '/data/bc_dsm_v12.laz';
+    // const filesToLoad = getDataUrl('bc_dsm_v12.laz');
 
     this.pointCloudViewer.load(filesToLoad, (progress, fileNum, totalFiles, currentFile) => {
       this.updateLoadingProgress(progress, fileNum, totalFiles, currentFile);

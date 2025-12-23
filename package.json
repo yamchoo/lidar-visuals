@@ -6,12 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "upload-blob": "node scripts/upload-to-blob-parallel.js"
   },
   "dependencies": {
     "@loaders.gl/core": "^4.3.4",
     "@loaders.gl/las": "^4.3.4",
     "@tweenjs/tween.js": "^25.0.0",
+    "@vercel/blob": "^2.0.0",
+    "dotenv": "^17.2.3",
     "potree-core": "^2.0.3",
     "three": "^0.170.0"
   },
