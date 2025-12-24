@@ -578,3 +578,416 @@ body {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
+
+/* ========================================
+   FILE SELECTOR MODAL
+   ======================================== */
+
+.file-selector-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.file-selector-modal.visible {
+  opacity: 1;
+}
+
+.file-selector-content {
+  background: var(--bg-space);
+  border: 1px solid var(--border-glass-bright);
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-strong), var(--glow-cyan);
+  overflow: hidden;
+}
+
+.file-selector-header {
+  padding: var(--space-xl);
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.file-selector-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+.file-selector-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.file-selector-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-lg);
+}
+
+.file-group {
+  margin-bottom: var(--space-xl);
+}
+
+.file-group:last-child {
+  margin-bottom: 0;
+}
+
+.file-group-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-md) 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-icon {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.file-list.collapsed {
+  display: none;
+}
+
+.file-item {
+  background: var(--bg-control);
+  border: 1px solid var(--border-glass);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  border-color: var(--border-glass-bright);
+  background: var(--bg-glass-hover);
+}
+
+.file-item-label {
+  display: flex;
+  align-items: center;
+  padding: var(--space-md);
+  cursor: pointer;
+  gap: var(--space-md);
+}
+
+.file-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.file-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-item-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.recommended-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--accent-primary);
+  color: var(--bg-void);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.file-item-details {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.file-size-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.file-size-badge.good {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success);
+}
+
+.file-size-badge.warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+
+.file-size-badge.danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--error);
+}
+
+.file-description {
+  color: var(--text-tertiary);
+}
+
+.file-selector-footer {
+  padding: var(--space-lg) var(--space-xl);
+  border-top: 1px solid var(--border-glass);
+  background: var(--bg-glass);
+}
+
+.selection-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.file-selector-actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.file-selector-btn {
+  flex: 1;
+  padding: var(--space-md) var(--space-lg);
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.file-selector-btn.primary {
+  background: var(--accent-primary);
+  color: var(--bg-void);
+}
+
+.file-selector-btn.primary:hover:not(:disabled) {
+  background: var(--accent-bright);
+  transform: translateY(-1px);
+}
+
+.file-selector-btn.primary:disabled {
+  background: var(--bg-control);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.file-selector-btn.secondary {
+  background: var(--bg-control);
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+}
+
+.file-selector-btn.secondary:hover {
+  background: var(--warning);
+  border-color: var(--warning);
+  color: var(--bg-void);
+}
+
+/* ========================================
+   MOBILE RESPONSIVE STYLES
+   ======================================== */
+
+/* Mobile Breakpoint (phones) */
+@media screen and (max-width: 768px) {
+  /* File Selector adjustments */
+  .file-selector-modal {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .file-selector-content {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .file-selector-header {
+    padding: var(--space-lg);
+  }
+
+  .file-selector-header h2 {
+    font-size: 20px;
+  }
+
+  .file-selector-body {
+    padding: var(--space-md);
+  }
+
+  .file-selector-footer {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .file-selector-actions {
+    flex-direction: column;
+  }
+
+  .file-selector-btn {
+    width: 100%;
+  }
+
+  /* Control Panel - Bottom Sheet Design */
+  .control-panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 60vh;
+    border-radius: 16px 16px 0 0;
+    transform: translateY(calc(100% - 56px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .control-panel.expanded {
+    transform: translateY(0);
+  }
+
+  .panel-header {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .panel-header::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border-glass-bright);
+    border-radius: 2px;
+    margin: var(--space-sm) auto 0;
+  }
+
+  /* Larger touch targets (44x44px minimum) */
+  .control-button,
+  .preset-button,
+  .bookmark-button {
+    min-height: 44px;
+    padding: var(--space-md) var(--space-lg);
+    font-size: 15px;
+  }
+
+  .control-select {
+    min-height: 44px;
+    font-size: 15px;
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .minimize-button {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  /* Hide FPS mode option on mobile */
+  .control-select option[value="fps"] {
+    display: none;
+  }
+
+  /* Adjust performance monitor position */
+  #performance-monitor {
+    bottom: 70px;
+    left: var(--space-sm);
+    font-size: 11px;
+    padding: var(--space-xs) var(--space-sm);
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .control-button:hover,
+  .preset-button:hover,
+  .file-item:hover {
+    background: var(--bg-control);
+    transform: none;
+  }
+
+  .control-button:active,
+  .preset-button:active {
+    background: var(--accent-primary);
+    transform: scale(0.98);
+  }
+
+  .file-item:active {
+    border-color: var(--accent-primary);
+  }
+}
+
+/* Tablet adjustments (landscape) */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .control-panel {
+    width: 320px;
+    top: var(--space-lg);
+    right: var(--space-lg);
+  }
+
+  .file-selector-content {
+    max-width: 500px;
+  }
+}
+
+/* Landscape mobile adjustments */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .control-panel {
+    max-height: 50vh;
+    font-size: 12px;
+  }
+
+  .control-section {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .file-selector-content {
+    max-height: 80vh;
+  }
+}
+
+/* Touch-action prevention for canvas */
+#canvas-container canvas {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

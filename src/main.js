@@ -7,6 +7,8 @@ import { CameraPathManager } from './animation/CameraPathManager.js';
 import { ControlPanel } from './ui/ControlPanel.js';
 import { PerformanceMonitor } from './utils/PerformanceMonitor.js';
 import { ViewpointManager } from './utils/ViewpointManager.js';
+import { DeviceDetector } from './utils/DeviceDetector.js';
+import { FileSelector } from './ui/FileSelector.js';
 import { getDataUrl } from './config/blobUrls.js';
 import './ui/styles.css';
 
@@ -39,7 +41,22 @@ class LiDARVisualizer {
     this.pointCloudBounds = null;
     this.orbitCenterIndicator = null;
 
-    this.init();
+    // Mobile detection and performance profiling
+    this.deviceDetector = new DeviceDetector();
+    this.isMobile = this.deviceDetector.isMobile();
+    this.performanceProfile = this.deviceDetector.getPerformanceProfile();
+    this.selectedFiles = null;  // For mobile file selection
+    this.fileSelector = null;
+
+    // Log device info for debugging
+    this.deviceDetector.logDeviceInfo();
+
+    // Initialize based on device type
+    if (this.isMobile) {
+      this.initMobile();
+    } else {
+      this.init();
+    }
   }
 
   init() {
@@ -55,6 +72,41 @@ class LiDARVisualizer {
     this.setupEventListeners();
     this.setupOrbitCenterControl();
     this.animate();
+  }
+
+  /**
+   * Mobile initialization flow - shows file selector before loading
+   */
+  async initMobile() {
+    // Phase 1: Setup basic scene without loading files
+    this.setupScene();
+    this.setupCamera();
+    this.setupRenderer();
+    this.setupControls();
+
+    // Phase 2: Show file selector and wait for user selection
+    this.fileSelector = new FileSelector({
+      files: this.getFileCatalog(),
+      onFilesSelected: (files) => this.loadSelectedFiles(files)
+    });
+
+    console.log('Showing file selector for mobile...');
+
+    try {
+      await this.fileSelector.show();
+
+      // Phase 3: Complete initialization after files are loaded
+      this.setupCameraPathSystem();
+      this.setupViewpointSystem();
+      this.setupUI();
+      this.setupPerformanceMonitor();
+      this.setupEventListeners();
+      this.setupOrbitCenterControl();
+      this.animate();
+    } catch (error) {
+      console.error('Mobile initialization failed:', error);
+      this.showError('Failed to initialize mobile viewer');
+    }
   }
 
   setupScene() {
@@ -81,20 +133,25 @@ class LiDARVisualizer {
 
   setupRenderer() {
     const container = document.getElementById('canvas-container');
+    const profile = this.performanceProfile;
+
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: profile.antialias,           // Disable on mobile for performance
       logarithmicDepthBuffer: true,
-      powerPreference: 'high-performance',  // Use high-performance GPU
-      precision: 'highp'                     // High precision shaders
+      powerPreference: profile.powerPreference,  // 'default' on mobile, 'high-performance' on desktop
+      precision: profile.precision               // 'mediump' on mobile, 'highp' on desktop
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Cap pixel ratio at 1.5 for better performance on high-DPI displays
-    // This reduces rendering resolution while maintaining good visual quality
-    const pixelRatio = Math.min(window.devicePixelRatio, 1.5);
+    // Apply device-appropriate pixel ratio from performance profile
+    const pixelRatio = Math.min(window.devicePixelRatio, profile.pixelRatio);
     this.renderer.setPixelRatio(pixelRatio);
 
-    console.log(`Renderer pixel ratio: ${pixelRatio} (device: ${window.devicePixelRatio})`);
+    console.log(`Renderer configured for ${this.deviceDetector.getDeviceType()}:`);
+    console.log(`  Pixel ratio: ${pixelRatio} (profile: ${profile.pixelRatio}, device: ${window.devicePixelRatio})`);
+    console.log(`  Antialias: ${profile.antialias}`);
+    console.log(`  Power: ${profile.powerPreference}, Precision: ${profile.precision}`);
+
     container.appendChild(this.renderer.domElement);
   }
 
@@ -130,23 +187,27 @@ class LiDARVisualizer {
   }
 
   setupPointCloudViewer() {
-    this.pointCloudViewer = new PointCloudViewer(this.scene, this.camera, this.renderer);
+    this.pointCloudViewer = new PointCloudViewer(
+      this.scene,
+      this.camera,
+      this.renderer,
+      this.performanceProfile.skip  // Pass device-appropriate sampling rate
+    );
+
+    console.log(`Point cloud sampling: skip=${this.performanceProfile.skip} (~${(100/this.performanceProfile.skip).toFixed(1)}% of points)`);
 
     // Configure files to load
-    // Twelve tiles total (all large files split for memory management):
+    // Ten files total (mix of split tiles and original DSM files from Vercel Blob + R2):
     const filesToLoad = [
-      getDataUrl('bc_092g025_3_4_1_west.laz'),    // Tile 3_4_1 west (30MB)
-      getDataUrl('bc_092g025_3_4_1_east.laz'),    // Tile 3_4_1 east (61MB)
-      getDataUrl('bc_092g025_3_4_2_west.laz'),    // Tile 3_4_2 west (52MB)
-      getDataUrl('bc_092g025_3_4_2_east.laz'),    // Tile 3_4_2 east (39MB)
+      getDataUrl('bc_092g025_3_4_1_xyes_8_utm10_20170601_dsm.laz'),  // Tile 3_4_1 DSM from R2 (95MB)
+      getDataUrl('bc_092g025_3_4_2_xyes_8_utm10_20170601_dsm.laz'),  // Tile 3_4_2 DSM from R2 (94MB)
       getDataUrl('bc_092g025_3_4_3_west.laz'),    // Tile 3_4_3 west (71MB)
       getDataUrl('bc_092g025_3_4_3_middle.laz'),  // Tile 3_4_3 middle (68MB)
       getDataUrl('bc_092g025_3_4_3_east.laz'),    // Tile 3_4_3 east (50MB)
+      getDataUrl('bc_092g025_3_4_3_xyes_8_utm10_20170601_dsm.laz'),  // Tile 3_4_3 DSM from R2 (188MB) - Vancouver downtown
       getDataUrl('bc_092g025_3_4_4_xyes_8_utm10_20170601_dsm.laz'),  // Tile 3_4_4 (30MB)
-      getDataUrl('bc_dsm_v12_west.laz'),          // Original tile west (49MB)
-      getDataUrl('bc_dsm_v12_east.laz'),          // Original tile east (41MB)
-      getDataUrl('bc_092g025_3_2_4_west.laz'),    // Tile 3_2_4 west (42MB)
-      getDataUrl('bc_092g025_3_2_4_east.laz')     // Tile 3_2_4 east (42MB)
+      getDataUrl('bc_dsm_v12.laz'),               // Complete Stanley Park area from R2 (90MB)
+      getDataUrl('bc_092g025_3_2_4_xyes_8_utm10_20170601_dsm.laz')   // Tile 3_2_4 DSM from R2 (89MB)
     ];
 
     // Single file (for testing):
@@ -640,6 +701,134 @@ class LiDARVisualizer {
     }
 
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * Get file catalog for file selector
+   * @returns {Array} Array of file metadata objects
+   */
+  getFileCatalog() {
+    return [
+      // Featured files
+      {
+        id: 'stanley-park',
+        name: 'Stanley Park',
+        filename: 'bc_dsm_v12.laz',
+        size: 90,
+        description: 'Complete Stanley Park area',
+        recommended: true,
+        category: 'featured'
+      },
+      {
+        id: 'downtown',
+        name: 'Downtown Vancouver',
+        filename: 'bc_092g025_3_4_3_xyes_8_utm10_20170601_dsm.laz',
+        size: 188,
+        description: 'Downtown core and waterfront',
+        recommended: false,
+        category: 'featured'
+      },
+      // Individual tiles
+      {
+        id: 'tile-3-4-1',
+        name: 'Tile 3_4_1',
+        filename: 'bc_092g025_3_4_1_xyes_8_utm10_20170601_dsm.laz',
+        size: 95,
+        description: 'North area',
+        category: 'tiles'
+      },
+      {
+        id: 'tile-3-4-2',
+        name: 'Tile 3_4_2',
+        filename: 'bc_092g025_3_4_2_xyes_8_utm10_20170601_dsm.laz',
+        size: 94,
+        description: 'Central area',
+        category: 'tiles'
+      },
+      {
+        id: 'tile-3-4-3-west',
+        name: 'Tile 3_4_3 West',
+        filename: 'bc_092g025_3_4_3_west.laz',
+        size: 71,
+        description: 'West section',
+        category: 'tiles'
+      },
+      {
+        id: 'tile-3-4-3-middle',
+        name: 'Tile 3_4_3 Middle',
+        filename: 'bc_092g025_3_4_3_middle.laz',
+        size: 68,
+        description: 'Middle section',
+        category: 'tiles'
+      },
+      {
+        id: 'tile-3-4-3-east',
+        name: 'Tile 3_4_3 East',
+        filename: 'bc_092g025_3_4_3_east.laz',
+        size: 50,
+        description: 'East section',
+        category: 'tiles'
+      },
+      {
+        id: 'tile-3-4-4',
+        name: 'Tile 3_4_4',
+        filename: 'bc_092g025_3_4_4_xyes_8_utm10_20170601_dsm.laz',
+        size: 30,
+        description: 'South area',
+        category: 'tiles'
+      },
+      {
+        id: 'tile-3-2-4',
+        name: 'Tile 3_2_4',
+        filename: 'bc_092g025_3_2_4_xyes_8_utm10_20170601_dsm.laz',
+        size: 89,
+        description: 'Northeast area',
+        category: 'tiles'
+      }
+    ];
+  }
+
+  /**
+   * Load selected files from file selector
+   * @param {Array} selectedFiles - Array of file metadata objects
+   */
+  async loadSelectedFiles(selectedFiles) {
+    this.selectedFiles = selectedFiles;
+    const urls = selectedFiles.map(f => getDataUrl(f.filename));
+
+    console.log(`Loading ${selectedFiles.length} file(s):`, selectedFiles.map(f => f.name).join(', '));
+
+    // Load point clouds
+    this.setupPointCloudViewer();
+
+    try {
+      const result = await this.pointCloudViewer.load(urls, (progress, fileNum, totalFiles, currentFile) => {
+        this.updateLoadingProgress(progress, fileNum, totalFiles, currentFile);
+      });
+
+      this.hideLoadingOverlay();
+
+      // Handle both single file (returns bounds) and multiple files (returns object with bounds)
+      const bounds = result.bounds || result;
+      this.centerCameraOnPointCloud(bounds);
+
+      // Initialize camera paths based on actual point cloud bounds
+      this.pathManager.initializePaths(bounds);
+      console.log('Camera paths initialized for selected files');
+
+      // Refresh the UI dropdown with newly initialized paths
+      this.controlPanel.refreshCameraPaths();
+
+      if (result.failed && result.failed > 0) {
+        console.warn(`Loaded ${result.loaded}/${result.loaded + result.failed} files`);
+        this.showWarning(`${result.failed} file(s) failed to load`);
+      }
+
+      console.log('Point cloud loaded successfully');
+    } catch (error) {
+      console.error('Error loading point cloud:', error);
+      this.showError('Failed to load point cloud');
+    }
   }
 }
 

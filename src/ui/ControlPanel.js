@@ -14,6 +14,12 @@ export class ControlPanel {
   init() {
     this.createPanel();
     this.createPanelHeader();
+
+    // Setup mobile-specific behavior
+    if (this.visualizer.isMobile) {
+      this.setupMobileBehavior();
+    }
+
     this.createControlModeControls();
     this.createColorModeControls();
     this.createPointSizeControl();
@@ -21,6 +27,42 @@ export class ControlPanel {
     this.createViewControls();
     // Removed: Camera Position and Camera Presets sections
     this.createPerformanceToggle();
+  }
+
+  /**
+   * Setup mobile-specific panel behavior (tap to expand/collapse)
+   */
+  setupMobileBehavior() {
+    const header = this.panel.querySelector('.panel-header');
+
+    // Tap header to expand/collapse
+    header.addEventListener('click', (e) => {
+      // Don't toggle if clicking the minimize button
+      if (e.target.classList.contains('minimize-button')) {
+        return;
+      }
+
+      this.panel.classList.toggle('expanded');
+    });
+
+    // Swipe down to collapse (optional enhancement)
+    let startY = 0;
+    let startTime = 0;
+
+    header.addEventListener('touchstart', (e) => {
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+    }, { passive: true });
+
+    header.addEventListener('touchmove', (e) => {
+      const deltaY = e.touches[0].clientY - startY;
+      const deltaTime = Date.now() - startTime;
+
+      // If swiping down quickly (>50px in <300ms), collapse panel
+      if (deltaY > 50 && deltaTime < 300 && this.panel.classList.contains('expanded')) {
+        this.panel.classList.remove('expanded');
+      }
+    }, { passive: true });
   }
 
   createPanel() {

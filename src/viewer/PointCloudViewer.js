@@ -3,13 +3,14 @@ import { load } from '@loaders.gl/core';
 import { LASLoader } from '@loaders.gl/las';
 
 export class PointCloudViewer {
-  constructor(scene, camera, renderer) {
+  constructor(scene, camera, renderer, skipSampling = 20) {
     this.scene = scene;
     this.camera = camera;
     this.renderer = renderer;
     this.pointCloud = null;
     this.colorMode = 'elevation';
     this.bounds = null;
+    this.skipSampling = skipSampling;  // Configurable sampling rate (default 20 = 5%)
   }
 
   async load(urlsOrUrl, onProgress) {
@@ -121,7 +122,7 @@ export class PointCloudViewer {
         las: {
           colorDepth: 16,
           fp64: false,
-          skip: 20  // High quality - ~6.4M points (5% sampling)
+          skip: this.skipSampling  // Configurable sampling (mobile: 50 = 2%, desktop: 20 = 5%)
         },
         onProgress: (progress) => {
           if (onProgress && progress.percent) {

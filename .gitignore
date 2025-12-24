@@ -23,14 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
-# LiDAR data (large files)
-public/data/*.laz
-public/data/*.las
-public/data/*.ply
-public/data/*.copc
+# LiDAR data (large files) - ignore entire data directory
+public/data/
 
 # Playwright screenshots
 .playwright-mcp/
 
 # Vercel Blob upload artifacts
 blob-urls.json
+.vercel
