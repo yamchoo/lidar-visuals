@@ -7,9 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "upload-blob": "node scripts/upload-to-blob-parallel.js"
+    "upload-blob": "node scripts/upload-to-blob-parallel.js",
+    "regenerate-r2-urls": "node scripts/regenerate-r2-urls.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.958.0",
+    "@aws-sdk/s3-request-presigner": "^3.958.0",
     "@loaders.gl/core": "^4.3.4",
     "@loaders.gl/las": "^4.3.4",
     "@tweenjs/tween.js": "^25.0.0",

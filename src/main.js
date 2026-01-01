@@ -200,7 +200,8 @@ class LiDARVisualizer {
     console.log(`Point cloud sampling: skip=${this.performanceProfile.skip} (~${(100/this.performanceProfile.skip).toFixed(1)}% of points)`);
 
     // Configure files to load
-    // Ten files total (mix of split tiles and original DSM files from Vercel Blob + R2):
+    // Mix of Vercel Blob URLs (permanent) and R2 presigned URLs (7-day expiration)
+    // Run 'npm run regenerate-r2-urls' weekly to refresh R2 URLs
     const filesToLoad = [
       getDataUrl('bc_092g025_3_4_1_xyes_8_utm10_20170601_dsm.laz'),  // Tile 3_4_1 DSM from R2 (95MB)
       getDataUrl('bc_092g025_3_4_2_xyes_8_utm10_20170601_dsm.laz'),  // Tile 3_4_2 DSM from R2 (94MB)
@@ -719,10 +720,10 @@ class LiDARVisualizer {
    */
   getFileCatalog() {
     return [
-      // Featured files
+      // Featured files (best for mobile viewing)
       {
         id: 'stanley-park',
-        name: 'Stanley Park',
+        name: 'Stanley Park (Complete)',
         filename: 'bc_dsm_v12.laz',
         size: 90,
         description: 'Complete Stanley Park area',
@@ -734,65 +735,82 @@ class LiDARVisualizer {
         name: 'Downtown Vancouver',
         filename: 'bc_092g025_3_4_3_xyes_8_utm10_20170601_dsm.laz',
         size: 188,
-        description: 'Downtown core and waterfront',
-        recommended: false,
+        description: 'Complete downtown area',
+        recommended: true,
         category: 'featured'
       },
-      // Individual tiles
+      // Smaller split versions (faster loading)
+      {
+        id: 'stanley-park-west',
+        name: 'Stanley Park West',
+        filename: 'bc_dsm_v12_west.laz',
+        size: 45,
+        description: 'West section of Stanley Park',
+        category: 'featured'
+      },
+      {
+        id: 'stanley-park-east',
+        name: 'Stanley Park East',
+        filename: 'bc_dsm_v12_east.laz',
+        size: 45,
+        description: 'East section of Stanley Park',
+        category: 'featured'
+      },
+      {
+        id: 'tile-3-4-3-west',
+        name: 'Downtown West',
+        filename: 'bc_092g025_3_4_3_west.laz',
+        size: 71,
+        description: 'West downtown section',
+        category: 'featured'
+      },
+      {
+        id: 'tile-3-4-3-middle',
+        name: 'Downtown Middle',
+        filename: 'bc_092g025_3_4_3_middle.laz',
+        size: 68,
+        description: 'Central downtown section',
+        category: 'featured'
+      },
+      {
+        id: 'tile-3-4-3-east',
+        name: 'Downtown East',
+        filename: 'bc_092g025_3_4_3_east.laz',
+        size: 50,
+        description: 'East downtown section',
+        category: 'featured'
+      },
+      // Additional coverage tiles
       {
         id: 'tile-3-4-1',
-        name: 'Tile 3_4_1',
+        name: 'North Area',
         filename: 'bc_092g025_3_4_1_xyes_8_utm10_20170601_dsm.laz',
         size: 95,
-        description: 'North area',
+        description: 'North coverage area',
         category: 'tiles'
       },
       {
         id: 'tile-3-4-2',
-        name: 'Tile 3_4_2',
+        name: 'Northeast Area',
         filename: 'bc_092g025_3_4_2_xyes_8_utm10_20170601_dsm.laz',
         size: 94,
-        description: 'Central area',
-        category: 'tiles'
-      },
-      {
-        id: 'tile-3-4-3-west',
-        name: 'Tile 3_4_3 West',
-        filename: 'bc_092g025_3_4_3_west.laz',
-        size: 71,
-        description: 'West section',
-        category: 'tiles'
-      },
-      {
-        id: 'tile-3-4-3-middle',
-        name: 'Tile 3_4_3 Middle',
-        filename: 'bc_092g025_3_4_3_middle.laz',
-        size: 68,
-        description: 'Middle section',
-        category: 'tiles'
-      },
-      {
-        id: 'tile-3-4-3-east',
-        name: 'Tile 3_4_3 East',
-        filename: 'bc_092g025_3_4_3_east.laz',
-        size: 50,
-        description: 'East section',
+        description: 'Northeast coverage area',
         category: 'tiles'
       },
       {
         id: 'tile-3-4-4',
-        name: 'Tile 3_4_4',
+        name: 'South Area',
         filename: 'bc_092g025_3_4_4_xyes_8_utm10_20170601_dsm.laz',
         size: 30,
-        description: 'South area',
+        description: 'South area (smallest file)',
         category: 'tiles'
       },
       {
         id: 'tile-3-2-4',
-        name: 'Tile 3_2_4',
+        name: 'West Area',
         filename: 'bc_092g025_3_2_4_xyes_8_utm10_20170601_dsm.laz',
         size: 89,
-        description: 'Northeast area',
+        description: 'West coverage area',
         category: 'tiles'
       }
     ];
