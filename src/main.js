@@ -9,6 +9,7 @@ import { PerformanceMonitor } from './utils/PerformanceMonitor.js';
 import { ViewpointManager } from './utils/ViewpointManager.js';
 import { DeviceDetector } from './utils/DeviceDetector.js';
 import { FileSelector } from './ui/FileSelector.js';
+import { MobileControls } from './ui/MobileControls.js';
 import { getDataUrl } from './config/blobUrls.js';
 import './ui/styles.css';
 
@@ -47,6 +48,7 @@ class LiDARVisualizer {
     this.performanceProfile = this.deviceDetector.getPerformanceProfile();
     this.selectedFiles = null;  // For mobile file selection
     this.fileSelector = null;
+    this.mobileControls = null;  // Mobile navigation controls
 
     // Log device info for debugging
     this.deviceDetector.logDeviceInfo();
@@ -99,6 +101,7 @@ class LiDARVisualizer {
       this.setupCameraPathSystem();
       this.setupViewpointSystem();
       this.setupUI();
+      this.setupMobileControls();  // Initialize mobile navigation controls
       this.setupPerformanceMonitor();
       this.setupEventListeners();
       this.setupOrbitCenterControl();
@@ -261,6 +264,13 @@ class LiDARVisualizer {
       cameraPresets: this.cameraPresets,
       visualizer: this
     });
+  }
+
+  setupMobileControls() {
+    if (this.isMobile) {
+      console.log('Initializing mobile touch controls...');
+      this.mobileControls = new MobileControls(this);
+    }
   }
 
   setupPerformanceMonitor() {

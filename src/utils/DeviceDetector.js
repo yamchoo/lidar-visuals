@@ -133,20 +133,20 @@ export class DeviceDetector {
     switch (this.deviceType) {
       case 'mobile':
         return {
-          skip: 50,           // ~2% point sampling (vs 5% desktop)
+          skip: 60,           // ~1.7% point sampling (reduced for faster loading)
           antialias: false,   // Disable antialiasing for performance
           pixelRatio: 1.0,    // Lower pixel ratio
-          pointSize: 0.8,     // Slightly larger points to compensate
+          pointSize: 0.9,     // Slightly larger points to compensate for fewer points
           powerPreference: 'default',
           precision: 'mediump'
         };
 
       case 'tablet':
         return {
-          skip: 30,           // ~3.3% point sampling
+          skip: 40,           // ~2.5% point sampling (reduced for faster loading)
           antialias: false,   // Still disable AA on tablet GPUs
           pixelRatio: 1.2,    // Moderate pixel ratio
-          pointSize: 0.6,     // Medium point size
+          pointSize: 0.7,     // Slightly larger points to compensate
           powerPreference: 'default',
           precision: 'highp'
         };
@@ -154,7 +154,7 @@ export class DeviceDetector {
       case 'desktop':
       default:
         return {
-          skip: 20,           // ~5% point sampling (current default)
+          skip: 30,           // ~3.3% point sampling (reduced for faster loading)
           antialias: true,    // Enable antialiasing
           pixelRatio: 1.5,    // Higher pixel ratio (capped)
           pointSize: 0.5,     // Smaller points for detail
