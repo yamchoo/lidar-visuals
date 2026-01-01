@@ -550,6 +550,12 @@ export class MobileControls {
 
   // Canvas Touch Handlers
   onCanvasTouchStart(e) {
+    // Don't capture touches that start on UI elements
+    const target = e.target;
+    if (target && target.closest && target.closest('.mobile-controls, .control-panel, button, .quick-menu')) {
+      return;
+    }
+
     if (e.touches.length === 1) {
       this.touchStartPos = {
         x: e.touches[0].clientX,
@@ -563,6 +569,12 @@ export class MobileControls {
   }
 
   onCanvasTouchMove(e) {
+    // Don't capture touches on UI elements
+    const target = e.target;
+    if (target && target.closest && target.closest('.mobile-controls, .control-panel, button, .quick-menu')) {
+      return;
+    }
+
     if (e.touches.length === 2) {
       e.preventDefault();
 

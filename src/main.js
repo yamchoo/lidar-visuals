@@ -270,6 +270,13 @@ class LiDARVisualizer {
   setupMobileControls() {
     if (this.isMobile) {
       console.log('Initializing mobile touch controls...');
+
+      // Disable OrbitControls on mobile - we use custom touch controls
+      if (this.orbitControls) {
+        this.orbitControls.enabled = false;
+        console.log('Disabled OrbitControls for mobile touch navigation');
+      }
+
       this.mobileControls = new MobileControls(this);
     }
   }
