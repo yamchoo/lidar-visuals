@@ -1353,11 +1353,17 @@ body {
   padding: var(--space-xl);
   z-index: 400;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.3s ease;
 }
 
 .gesture-overlay:not(.hidden) {
   opacity: 1;
+  pointer-events: auto;
+}
+
+.gesture-overlay.hidden {
+  display: none;
 }
 
 .gesture-hint {
