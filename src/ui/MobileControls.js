@@ -39,15 +39,12 @@ export class MobileControls {
     const fabGroup = document.createElement('div');
     fabGroup.className = 'mobile-fab-group top-right';
 
-    // Reset view button
+    // Reset view button (quick action for returning to home view)
     const resetBtn = this.createButton('mobile-fab', 'reset-view', 'Reset View');
     resetBtn.appendChild(this.createSVG('reset'));
     fabGroup.appendChild(resetBtn);
 
-    // Toggle controls button
-    const toggleBtn = this.createButton('mobile-fab', 'toggle-controls', 'Toggle Controls');
-    toggleBtn.appendChild(this.createSVG('menu'));
-    fabGroup.appendChild(toggleBtn);
+    // Note: Toggle controls removed - use Settings button in nav bar instead
 
     this.container.appendChild(fabGroup);
   }
@@ -381,7 +378,14 @@ export class MobileControls {
   }
 
   showPathsMenu() {
-    const paths = this.visualizer.pathManager?.getAllPaths() || [];
+    const pathsObject = this.visualizer.pathManager?.getAllPaths() || {};
+    const paths = Object.values(pathsObject);
+
+    if (paths.length === 0) {
+      this.showFeedback('No camera paths available');
+      return;
+    }
+
     const items = paths.map(path => ({
       label: path.name,
       action: () => this.visualizer.pathAnimator?.startPath(path.id)
@@ -575,7 +579,40 @@ export class MobileControls {
       return;
     }
 
-    if (e.touches.length === 2) {
+    if (e.touches.length === 1) {
+      // One finger drag - rotate camera (look around)
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - this.touchStartPos.x;
+      const deltaY = touch.clientY - this.touchStartPos.y;
+
+      const rotationSpeed = 0.005;
+
+      if (this.visualizer.camera) {
+        const camera = this.visualizer.camera;
+
+        // Horizontal rotation (yaw) - rotate around world Y axis
+        const yawQuaternion = new THREE.Quaternion();
+        yawQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * rotationSpeed);
+        camera.quaternion.multiply(yawQuaternion);
+
+        // Vertical rotation (pitch) - rotate around camera's local X axis
+        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+        const pitchQuaternion = new THREE.Quaternion();
+        pitchQuaternion.setFromAxisAngle(right, -deltaY * rotationSpeed);
+        camera.quaternion.multiply(pitchQuaternion);
+
+        // Normalize to prevent drift
+        camera.quaternion.normalize();
+      }
+
+      this.touchStartPos = {
+        x: touch.clientX,
+        y: touch.clientY
+      };
+
+    } else if (e.touches.length === 2) {
       e.preventDefault();
 
       // Pinch to zoom
@@ -585,11 +622,11 @@ export class MobileControls {
 
       if (this.lastTouchDistance > 0) {
         const delta = distance - this.lastTouchDistance;
-        const zoomSpeed = 0.01;
+        const zoomSpeed = 0.5;
 
         if (this.visualizer.camera) {
           const camera = this.visualizer.camera;
-          const zoomDirection = new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion);
+          const zoomDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
           zoomDirection.multiplyScalar(delta * zoomSpeed);
           camera.position.add(zoomDirection);
         }

@@ -67,6 +67,7 @@ class LiDARVisualizer {
     this.setupRenderer();
     this.setupControls();
     this.setupPointCloudViewer();
+    this.loadDesktopFiles();  // Auto-load all 9 tiles for desktop
     this.setupCameraPathSystem();
     this.setupViewpointSystem();
     this.setupUI();
@@ -198,8 +199,10 @@ class LiDARVisualizer {
     );
 
     console.log(`Point cloud sampling: skip=${this.performanceProfile.skip} (~${(100/this.performanceProfile.skip).toFixed(1)}% of points)`);
+  }
 
-    // Configure files to load
+  loadDesktopFiles() {
+    // Configure files to load for desktop (auto-load all tiles)
     // Mix of Vercel Blob URLs (permanent) and R2 presigned URLs (7-day expiration)
     // Run 'npm run regenerate-r2-urls' weekly to refresh R2 URLs
     const filesToLoad = [
