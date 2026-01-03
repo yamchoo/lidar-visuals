@@ -136,7 +136,6 @@ export class DeviceDetector {
           skip: 60,           // ~1.7% point sampling (reduced for faster loading)
           antialias: false,   // Disable antialiasing for performance
           pixelRatio: 1.0,    // Lower pixel ratio
-          pointSize: 0.9,     // Slightly larger points to compensate for fewer points
           powerPreference: 'default',
           precision: 'mediump'
         };
@@ -146,7 +145,6 @@ export class DeviceDetector {
           skip: 40,           // ~2.5% point sampling (reduced for faster loading)
           antialias: false,   // Still disable AA on tablet GPUs
           pixelRatio: 1.2,    // Moderate pixel ratio
-          pointSize: 0.7,     // Slightly larger points to compensate
           powerPreference: 'default',
           precision: 'highp'
         };
@@ -157,7 +155,6 @@ export class DeviceDetector {
           skip: 30,           // ~3.3% point sampling (reduced for faster loading)
           antialias: true,    // Enable antialiasing
           pixelRatio: 1.5,    // Higher pixel ratio (capped)
-          pointSize: 0.5,     // Smaller points for detail
           powerPreference: 'high-performance',
           precision: 'highp'
         };

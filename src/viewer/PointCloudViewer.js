@@ -627,11 +627,6 @@ export class PointCloudViewer {
     this.pointCloud.geometry.attributes.color.needsUpdate = true;
   }
 
-  setPointSize(size) {
-    if (!this.pointCloud) return;
-    this.pointCloud.material.size = size;
-  }
-
   setPointBudget(budget) {
     console.log('Point budget not applicable with loaders.gl');
   }

@@ -22,7 +22,6 @@ export class ControlPanel {
 
     this.createControlModeControls();
     this.createColorModeControls();
-    this.createPointSizeControl();
     this.createCameraPathControls();
     this.createViewControls();
     // Removed: Camera Position and Camera Presets sections
@@ -148,31 +147,6 @@ export class ControlPanel {
     });
 
     section.appendChild(select);
-  }
-
-  createPointSizeControl() {
-    const section = this.createSection('Point Size');
-
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = '0.5';
-    slider.max = '3.0';
-    slider.step = '0.1';
-    slider.value = '0.5';
-    slider.className = 'control-slider';
-
-    const valueDisplay = document.createElement('span');
-    valueDisplay.className = 'slider-value';
-    valueDisplay.textContent = '0.5';
-
-    slider.addEventListener('input', (e) => {
-      const value = parseFloat(e.target.value);
-      valueDisplay.textContent = value.toFixed(1);
-      this.pointCloudViewer.setPointSize(value);
-    });
-
-    section.appendChild(slider);
-    section.appendChild(valueDisplay);
   }
 
   createCameraPathControls() {

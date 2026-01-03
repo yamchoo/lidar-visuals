@@ -599,12 +599,8 @@ export class MobileControls {
       if (this.visualizer.camera) {
         const camera = this.visualizer.camera;
 
-        // Horizontal rotation (yaw) - rotate around world Y axis
-        const yawQuaternion = new THREE.Quaternion();
-        yawQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * rotationSpeed);
-        camera.quaternion.multiply(yawQuaternion);
-
-        // Vertical rotation (pitch) - rotate around camera's local X axis
+        // Vertical rotation only (pitch) - rotate around camera's local X axis
+        // Horizontal rotation (yaw) disabled to prevent disorientation
         const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
         const pitchQuaternion = new THREE.Quaternion();
         pitchQuaternion.setFromAxisAngle(right, -deltaY * rotationSpeed);
@@ -633,9 +629,9 @@ export class MobileControls {
 
         if (this.visualizer.camera) {
           const camera = this.visualizer.camera;
-          // Pinch in = move forward (negative), pinch out = move backward (positive)
+          // Pinch in = move backward, pinch out = move forward
           const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-          forward.multiplyScalar(-delta * moveSpeed); // Note the negative for intuitive pinch direction
+          forward.multiplyScalar(delta * moveSpeed); // Removed negative: pinch out (positive) = forward, pinch in (negative) = backward
           camera.position.add(forward);
         }
       }
