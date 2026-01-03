@@ -290,11 +290,14 @@ export class MobileControls {
     joystickStick.addEventListener('touchend', this.onJoystickEnd.bind(this));
 
     // Canvas gesture controls
-    const canvas = document.getElementById('canvas');
+    const canvas = this.visualizer.renderer?.domElement;
     if (canvas) {
+      console.log('Attaching touch listeners to canvas');
       canvas.addEventListener('touchstart', this.onCanvasTouchStart.bind(this), { passive: false });
       canvas.addEventListener('touchmove', this.onCanvasTouchMove.bind(this), { passive: false });
       canvas.addEventListener('touchend', this.onCanvasTouchEnd.bind(this), { passive: false });
+    } else {
+      console.error('Canvas not found for mobile touch controls');
     }
   }
 
@@ -388,7 +391,11 @@ export class MobileControls {
 
     const items = paths.map(path => ({
       label: path.name,
-      action: () => this.visualizer.pathAnimator?.startPath(path.id)
+      action: () => {
+        // Play the path immediately when selected
+        this.visualizer.pathAnimator?.playPath(path.id);
+        this.showFeedback(`Playing: ${path.name}`);
+      }
     }));
 
     this.showQuickMenu('Camera Paths', items);
@@ -615,20 +622,21 @@ export class MobileControls {
     } else if (e.touches.length === 2) {
       e.preventDefault();
 
-      // Pinch to zoom
+      // Pinch to move camera forward/backward
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (this.lastTouchDistance > 0) {
         const delta = distance - this.lastTouchDistance;
-        const zoomSpeed = 0.5;
+        const moveSpeed = 2.0; // Increased for more responsiveness
 
         if (this.visualizer.camera) {
           const camera = this.visualizer.camera;
-          const zoomDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-          zoomDirection.multiplyScalar(delta * zoomSpeed);
-          camera.position.add(zoomDirection);
+          // Pinch in = move forward (negative), pinch out = move backward (positive)
+          const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+          forward.multiplyScalar(-delta * moveSpeed); // Note the negative for intuitive pinch direction
+          camera.position.add(forward);
         }
       }
 
