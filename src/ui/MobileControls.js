@@ -599,8 +599,15 @@ export class MobileControls {
       if (this.visualizer.camera) {
         const camera = this.visualizer.camera;
 
-        // Vertical rotation only (pitch) - rotate around camera's local X axis
-        // Horizontal rotation (yaw) disabled to prevent disorientation
+        // FPS-style mouse look: yaw (horizontal) + pitch (vertical) rotation
+        // Matches desktop FPS mode behavior with PointerLockControls
+
+        // Horizontal rotation (yaw) - rotate around world Y axis
+        const yawQuaternion = new THREE.Quaternion();
+        yawQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * rotationSpeed);
+        camera.quaternion.multiply(yawQuaternion);
+
+        // Vertical rotation (pitch) - rotate around camera's local X axis
         const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
         const pitchQuaternion = new THREE.Quaternion();
         pitchQuaternion.setFromAxisAngle(right, -deltaY * rotationSpeed);
