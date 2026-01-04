@@ -32,7 +32,7 @@ export class MobileControls {
   init() {
     this.createControlsContainer();
     this.createFloatingActions();
-    this.createVirtualJoystick();
+    // Removed: createVirtualJoystick() - using direct touch controls instead
     this.createGestureOverlay();
     this.setupEventListeners();
   }
@@ -154,9 +154,7 @@ export class MobileControls {
     const list = document.createElement('ul');
     const instructions = [
       { label: 'One finger drag:', desc: 'Rotate view' },
-      { label: 'Two finger pinch:', desc: 'Zoom in/out' },
-      { label: 'Two finger drag:', desc: 'Pan camera' },
-      { label: 'Joystick:', desc: 'Fly through space' }
+      { label: 'Two finger pinch:', desc: 'Move forward/back' }
     ];
 
     instructions.forEach(inst => {
@@ -235,7 +233,6 @@ export class MobileControls {
     const navItems = [
       { action: 'color-mode', label: 'Colors', icon: 'palette' },
       { action: 'viewpoints', label: 'Views', icon: 'viewpoint' },
-      { action: 'toggle-joystick', label: 'Navigate', icon: 'joystick', primary: true },
       { action: 'paths', label: 'Paths', icon: 'path' }
     ];
 
@@ -290,12 +287,6 @@ export class MobileControls {
       btn.addEventListener('click', (e) => this.handleNavAction(e));
     });
 
-    // Virtual joystick
-    const joystickStick = this.joystick.querySelector('.joystick-stick');
-    joystickStick.addEventListener('touchstart', this.onJoystickStart.bind(this));
-    joystickStick.addEventListener('touchmove', this.onJoystickMove.bind(this));
-    joystickStick.addEventListener('touchend', this.onJoystickEnd.bind(this));
-
     // Canvas gesture controls
     const canvas = this.visualizer.renderer?.domElement;
     if (canvas) {
@@ -332,9 +323,6 @@ export class MobileControls {
     e.currentTarget.classList.add('active');
 
     switch (action) {
-      case 'toggle-joystick':
-        this.toggleJoystick();
-        break;
       case 'color-mode':
         this.showColorModeMenu();
         break;

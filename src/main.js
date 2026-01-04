@@ -86,6 +86,8 @@ class LiDARVisualizer {
     this.setupCamera();
     this.setupRenderer();
     this.setupControls();
+    this.setupCameraPathSystem();  // Initialize path system early so it's ready when files load
+    this.setupViewpointSystem();
 
     // Phase 2: Show file selector and wait for user selection
     this.fileSelector = new FileSelector({
@@ -99,8 +101,6 @@ class LiDARVisualizer {
       await this.fileSelector.show();
 
       // Phase 3: Complete initialization after files are loaded
-      this.setupCameraPathSystem();
-      this.setupViewpointSystem();
       this.setupUI();
       this.setupMobileControls();  // Initialize mobile navigation controls
       this.setupPerformanceMonitor();
