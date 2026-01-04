@@ -584,6 +584,18 @@ class LiDARVisualizer {
     this.onWindowResize();
   }
 
+  /**
+   * Set viewpoint by name (convenience method for mobile controls and UI)
+   * @param {string} viewpointName - Name of the viewpoint preset
+   */
+  setViewpoint(viewpointName) {
+    if (this.cameraPresets) {
+      this.cameraPresets.applyPreset(viewpointName);
+    } else {
+      console.error('Camera presets not initialized');
+    }
+  }
+
   updateMovement() {
     if (this.controlMode !== 'fps' || !this.fpsControls.isLocked || !this.fpsControls.enabled) {
       return;

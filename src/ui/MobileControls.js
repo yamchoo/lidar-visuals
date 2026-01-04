@@ -19,6 +19,7 @@ export class MobileControls {
     this.rotationActive = false;
     this.lastTouchDistance = 0;
     this.isControlsVisible = false;
+    this.isPinching = false;  // Track pinch gesture state
 
     // Pitch clamping configuration (matches desktop FPS)
     this.minPolarAngle = 0.01;  // ~89° down
@@ -452,19 +453,41 @@ export class MobileControls {
     // Show with animation
     setTimeout(() => menu.classList.add('visible'), 10);
 
-    // Close button
-    closeBtn.addEventListener('click', () => {
+    // Close button - use both touchend and click for better mobile compatibility
+    const handleClose = () => {
       menu.classList.remove('visible');
       setTimeout(() => menu.remove(), 300);
+    };
+
+    closeBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      handleClose();
     });
 
-    // Menu items
+    closeBtn.addEventListener('click', (e) => {
+      if (!e.cancelable) return;
+      handleClose();
+    });
+
+    // Menu items - use both touchend and click for better mobile compatibility
     menu.querySelectorAll('.quick-menu-item').forEach((btn, i) => {
-      btn.addEventListener('click', () => {
+      const handleSelect = () => {
         items[i].action();
         menu.classList.remove('visible');
         setTimeout(() => menu.remove(), 300);
-        this.showFeedback(items[i].label);
+      };
+
+      // Use touchend for immediate response on mobile
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();  // Prevent ghost clicks
+        handleSelect();
+      });
+
+      // Also keep click for desktop/fallback
+      btn.addEventListener('click', (e) => {
+        // Only handle click if it wasn't already handled by touchend
+        if (!e.cancelable) return;
+        handleSelect();
       });
     });
 
@@ -579,10 +602,12 @@ export class MobileControls {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY
       };
+      this.isPinching = false;
     } else if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       this.lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+      this.isPinching = true;  // Mark that we're in a pinch gesture
     }
   }
 
@@ -593,8 +618,9 @@ export class MobileControls {
       return;
     }
 
-    if (e.touches.length === 1) {
+    if (e.touches.length === 1 && !this.isPinching) {
       // One finger drag - rotate camera (look around)
+      // Skip if we were just pinching to avoid unwanted rotation when lifting fingers
       e.preventDefault();
 
       const touch = e.touches[0];
@@ -658,6 +684,11 @@ export class MobileControls {
   onCanvasTouchEnd(e) {
     if (e.touches.length < 2) {
       this.lastTouchDistance = 0;
+    }
+
+    // Reset pinch state when all touches are released
+    if (e.touches.length === 0) {
+      this.isPinching = false;
     }
   }
 
