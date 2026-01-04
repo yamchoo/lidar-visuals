@@ -5,6 +5,8 @@
 
 import * as THREE from 'three';
 
+const _PI_2 = Math.PI / 2;
+
 export class MobileControls {
   constructor(visualizer) {
     this.visualizer = visualizer;
@@ -17,6 +19,11 @@ export class MobileControls {
     this.rotationActive = false;
     this.lastTouchDistance = 0;
     this.isControlsVisible = false;
+
+    // Pitch clamping configuration (matches desktop FPS)
+    this.minPolarAngle = 0.01;  // ~89° down
+    this.maxPolarAngle = Math.PI - 0.01;  // ~89° up
+    this.rotationSpeed = 0.005;  // Touch rotation sensitivity
 
     this.init();
   }
@@ -594,27 +601,28 @@ export class MobileControls {
       const deltaX = touch.clientX - this.touchStartPos.x;
       const deltaY = touch.clientY - this.touchStartPos.y;
 
-      const rotationSpeed = 0.005;
+      const rotationSpeed = this.rotationSpeed;
 
       if (this.visualizer.camera) {
         const camera = this.visualizer.camera;
 
-        // FPS-style mouse look: yaw (horizontal) + pitch (vertical) rotation
-        // Matches desktop FPS mode behavior with PointerLockControls
+        // FPS-style mouse look with pitch clamping (matches desktop PointerLockControls)
+        // Convert quaternion to Euler to clamp pitch, then convert back
+        const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+        euler.setFromQuaternion(camera.quaternion);
 
-        // Horizontal rotation (yaw) - rotate around world Y axis
-        const yawQuaternion = new THREE.Quaternion();
-        yawQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * rotationSpeed);
-        camera.quaternion.multiply(yawQuaternion);
+        // Apply rotations to Euler angles
+        euler.y -= deltaX * rotationSpeed;  // Yaw (unlimited)
+        euler.x -= deltaY * rotationSpeed;  // Pitch (will be clamped)
 
-        // Vertical rotation (pitch) - rotate around camera's local X axis
-        const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-        const pitchQuaternion = new THREE.Quaternion();
-        pitchQuaternion.setFromAxisAngle(right, -deltaY * rotationSpeed);
-        camera.quaternion.multiply(pitchQuaternion);
+        // Clamp pitch to ±89° (matches PointerLockControls behavior)
+        euler.x = Math.max(
+          _PI_2 - this.maxPolarAngle,
+          Math.min(_PI_2 - this.minPolarAngle, euler.x)
+        );
 
-        // Normalize to prevent drift
-        camera.quaternion.normalize();
+        // Convert back to quaternion
+        camera.quaternion.setFromEuler(euler);
       }
 
       this.touchStartPos = {
