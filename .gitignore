@@ -32,3 +32,15 @@ public/data/
 # Vercel Blob upload artifacts
 blob-urls.json
 .vercel
+
+# Capacitor
+ios/App/Pods
+ios/App/public
+android/app/src/main/assets/public
+android/app/build
+android/.gradle
+android/.idea
+android/local.properties
+
+# Environment files
+.env.local

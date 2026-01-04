@@ -236,8 +236,7 @@ export class MobileControls {
       { action: 'color-mode', label: 'Colors', icon: 'palette' },
       { action: 'viewpoints', label: 'Views', icon: 'viewpoint' },
       { action: 'toggle-joystick', label: 'Navigate', icon: 'joystick', primary: true },
-      { action: 'paths', label: 'Paths', icon: 'path' },
-      { action: 'settings', label: 'Settings', icon: 'settings' }
+      { action: 'paths', label: 'Paths', icon: 'path' }
     ];
 
     navItems.forEach(item => {
@@ -344,9 +343,6 @@ export class MobileControls {
         break;
       case 'paths':
         this.showPathsMenu();
-        break;
-      case 'settings':
-        this.toggleControlPanel();
         break;
     }
   }

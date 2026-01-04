@@ -13,6 +13,16 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
     "@aws-sdk/s3-request-presigner": "^3.958.0",
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/network": "^8.0.0",
+    "@capacitor/preferences": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "@loaders.gl/core": "^4.3.4",
     "@loaders.gl/las": "^4.3.4",
     "@tweenjs/tween.js": "^25.0.0",
@@ -22,6 +32,7 @@
     "three": "^0.170.0"
   },
   "devDependencies": {
+    "typescript": "^5.9.3",
     "vite": "^6.0.1"
   }
 }

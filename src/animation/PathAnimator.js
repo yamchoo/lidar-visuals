@@ -11,6 +11,7 @@ export class PathAnimator {
     this.onCompleteCallback = null;
     this.tweenGroup = new TWEEN.Group();
     this.previousControlMode = null;
+    this.wasOrbitDisabled = false;  // Track if orbit was disabled before playback
   }
 
   playPath(pathId, onComplete) {
@@ -32,12 +33,21 @@ export class PathAnimator {
     }
 
     const controls = this.visualizer.orbitControls;
+
+    // On mobile, orbit controls are disabled by default - we need to enable them temporarily
+    this.wasOrbitDisabled = !controls.enabled;
+    if (this.wasOrbitDisabled) {
+      console.log('Temporarily enabling orbit controls for path animation (mobile)');
+      controls.enabled = true;
+    }
+
     console.log('Current camera target:', controls.target);
 
     this.currentPath = pathId;
     this.isPlaying = true;
     this.onCompleteCallback = onComplete;
 
+    // Disable controls during animation (they're now enabled if needed)
     controls.enabled = false;
 
     this.createTweenChain(path.keyframes);
@@ -131,8 +141,14 @@ export class PathAnimator {
     this.isPlaying = false;
     this.currentPath = null;
 
-    // Re-enable controls
-    this.visualizer.orbitControls.enabled = true;
+    // Restore orbit controls state (disable on mobile, enable on desktop)
+    if (this.wasOrbitDisabled) {
+      console.log('Restoring orbit controls to disabled (mobile)');
+      this.visualizer.orbitControls.enabled = false;
+    } else {
+      this.visualizer.orbitControls.enabled = true;
+    }
+    this.wasOrbitDisabled = false;
 
     // Restore previous control mode if we switched
     if (this.previousControlMode && this.previousControlMode !== this.visualizer.controlMode) {
@@ -156,8 +172,14 @@ export class PathAnimator {
   onPathComplete() {
     this.isPlaying = false;
 
-    // Re-enable controls
-    this.visualizer.orbitControls.enabled = true;
+    // Restore orbit controls state (disable on mobile, enable on desktop)
+    if (this.wasOrbitDisabled) {
+      console.log('Path complete - restoring orbit controls to disabled (mobile)');
+      this.visualizer.orbitControls.enabled = false;
+    } else {
+      this.visualizer.orbitControls.enabled = true;
+    }
+    this.wasOrbitDisabled = false;
 
     // Restore previous control mode if we switched
     if (this.previousControlMode && this.previousControlMode !== this.visualizer.controlMode) {
