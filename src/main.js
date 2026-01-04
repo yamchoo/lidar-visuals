@@ -723,7 +723,13 @@ class LiDARVisualizer {
       this.orbitControls.update();
     }
 
+    // Update path animator (must be before checking if path is playing)
     this.pathAnimator.update();
+
+    // During path animation, always update orbit controls to apply camera target changes
+    if (this.pathAnimator.isPlaying) {
+      this.orbitControls.update();
+    }
 
     if (this.pointCloudViewer) {
       this.pointCloudViewer.update();
@@ -999,8 +1005,8 @@ class CameraPresets {
 
     const preset = presets[presetName];
 
-    // Switch control mode if needed
-    if (this.visualizer.controlMode !== preset.controlMode) {
+    // Switch control mode if needed (skip on mobile - keep touch controls active)
+    if (!this.visualizer.isMobile && this.visualizer.controlMode !== preset.controlMode) {
       this.visualizer.setControlMode(preset.controlMode);
     }
 
@@ -1011,16 +1017,16 @@ class CameraPresets {
       preset.position.z
     );
 
-    // Apply rotation (for FPS) or target (for orbit)
-    if (preset.controlMode === 'fps' && preset.rotation) {
+    // Apply rotation (for FPS) or target (for orbit/mobile)
+    if (preset.controlMode === 'fps' && preset.rotation && !this.visualizer.isMobile) {
       this.visualizer.camera.rotation.set(
         preset.rotation.x,
         preset.rotation.y,
         preset.rotation.z
       );
-    } else if (preset.controlMode === 'orbit' && preset.target) {
-      this.visualizer.orbitControls.target.copy(preset.target);
-      this.visualizer.orbitControls.update();
+    } else if (preset.target) {
+      // On mobile or orbit mode, point camera at target
+      this.visualizer.camera.lookAt(preset.target);
     }
   }
 }
