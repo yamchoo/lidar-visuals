@@ -25,6 +25,7 @@ dist-ssr
 
 # LiDAR data (large files) - ignore entire data directory
 public/data/
+nyc-data/
 
 # Playwright screenshots
 .playwright-mcp/

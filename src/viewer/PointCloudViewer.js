@@ -118,7 +118,21 @@ export class PointCloudViewer {
     }
 
     try {
-      const data = await load(url, LASLoader, {
+      let dataSource = url;
+
+      // For native Capacitor files, fetch as ArrayBuffer first
+      // This works around loaders.gl worker issues with Capacitor file URIs
+      if (url.startsWith('capacitor://') || url.startsWith('capacitor-file://')) {
+        console.log(`Fetching native file as ArrayBuffer: ${url}`);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+        }
+        dataSource = await response.arrayBuffer();
+        console.log(`Fetched ${dataSource.byteLength} bytes`);
+      }
+
+      const data = await load(dataSource, LASLoader, {
         las: {
           colorDepth: 16,
           fp64: false,

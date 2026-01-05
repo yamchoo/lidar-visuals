@@ -137,13 +137,15 @@ class LiDARVisualizer {
     this.setupCameraPathSystem();
     this.setupViewpointSystem();
 
-    // Phase 2: Auto-load files (for now, load Stanley Park from cloud)
-    // TODO: Load from bundled files in Phase 2b
-    const filesToLoad = [
-      'bc_dsm_v12.laz'  // Stanley Park - 90MB
-    ];
+    // Phase 2: Auto-load all bundled files from manifest
+    console.log('📋 Loading manifest...');
+    const manifestResponse = await fetch('/data/manifest.json');
+    const manifest = await manifestResponse.json();
 
-    console.log(`Loading ${filesToLoad.length} files for native app...`);
+    const filesToLoad = manifest.bundled.map(f => f.filename);
+
+    console.log(`📦 Loading ${filesToLoad.length} bundled files for native app:`);
+    filesToLoad.forEach((f, i) => console.log(`  ${i+1}. ${f}`));
 
     try {
       const urls = [];
@@ -564,7 +566,15 @@ class LiDARVisualizer {
 
         // Pick a message based on file number for variety
         const message = messages[(fileNum - 1) % messages.length];
-        textElement.textContent = `${message} (${fileNum}/${totalFiles})`;
+        const progressPercent = Math.round(progress * 100);
+
+        // Show creative message with file progress
+        textElement.textContent = `${message} (${fileNum}/${totalFiles}) - ${progressPercent}%`;
+
+        // Log detailed progress to console for debugging
+        if (currentFile) {
+          console.log(`Loading file ${fileNum}/${totalFiles}: ${currentFile} - ${progressPercent}%`);
+        }
       }
     }
   }
