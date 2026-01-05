@@ -20,6 +20,16 @@ export class MobileControls {
     this.maxPolarAngle = Math.PI - 0.01;  // ~89° up
     this.rotationSpeed = 0.005;  // Touch rotation sensitivity
 
+    // Momentum/damping configuration
+    this.enableDamping = true;
+    this.dampingFactor = 0.05;  // Match OrbitControls default
+
+    // Velocity tracking (Euler angle deltas per frame)
+    this.rotationVelocity = { x: 0, y: 0 };  // x=pitch, y=yaw
+
+    // State tracking
+    this.isDragging = false;  // True during touch, false during coast
+
     this.init();
   }
 
@@ -452,11 +462,15 @@ export class MobileControls {
         y: e.touches[0].clientY
       };
       this.isPinching = false;
+      this.isDragging = true;
+      this.rotationVelocity = { x: 0, y: 0 };  // Reset velocity on new touch
     } else if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       this.lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
       this.isPinching = true;  // Mark that we're in a pinch gesture
+      // Clear rotation velocity when pinching starts
+      this.rotationVelocity = { x: 0, y: 0 };
     }
   }
 
@@ -468,7 +482,7 @@ export class MobileControls {
     }
 
     if (e.touches.length === 1 && !this.isPinching) {
-      // One finger drag - rotate camera (look around)
+      // One finger drag - accumulate rotation velocity for momentum
       // Skip if we were just pinching to avoid unwanted rotation when lifting fingers
       e.preventDefault();
 
@@ -478,27 +492,14 @@ export class MobileControls {
 
       const rotationSpeed = this.rotationSpeed;
 
-      if (this.visualizer.camera) {
-        const camera = this.visualizer.camera;
+      // Accumulate velocity (inverted controls maintained)
+      this.rotationVelocity.y += deltaX * rotationSpeed;  // Yaw
+      this.rotationVelocity.x += deltaY * rotationSpeed;  // Pitch
 
-        // FPS-style mouse look with pitch clamping (matches desktop PointerLockControls)
-        // Convert quaternion to Euler to clamp pitch, then convert back
-        const euler = new THREE.Euler(0, 0, 0, 'YXZ');
-        euler.setFromQuaternion(camera.quaternion);
-
-        // Apply rotations to Euler angles (inverted: swipe right = look left, swipe down = look up)
-        euler.y += deltaX * rotationSpeed;  // Yaw (unlimited) - inverted
-        euler.x += deltaY * rotationSpeed;  // Pitch (will be clamped) - inverted
-
-        // Clamp pitch to ±89° (matches PointerLockControls behavior)
-        euler.x = Math.max(
-          _PI_2 - this.maxPolarAngle,
-          Math.min(_PI_2 - this.minPolarAngle, euler.x)
-        );
-
-        // Convert back to quaternion
-        camera.quaternion.setFromEuler(euler);
-      }
+      // Cap velocity to prevent excessive spinning (0.5 rad/frame max)
+      const maxVelocity = 0.5;
+      this.rotationVelocity.y = Math.max(-maxVelocity, Math.min(maxVelocity, this.rotationVelocity.y));
+      this.rotationVelocity.x = Math.max(-maxVelocity, Math.min(maxVelocity, this.rotationVelocity.x));
 
       this.touchStartPos = {
         x: touch.clientX,
@@ -539,6 +540,70 @@ export class MobileControls {
     if (e.touches.length === 0) {
       this.isPinching = false;
     }
+
+    // When all touches released, stop dragging but keep velocity for momentum
+    if (e.touches.length === 0) {
+      this.isDragging = false;
+      // Don't reset velocity - let it coast!
+    }
+  }
+
+  /**
+   * Update camera rotation with damping/momentum
+   * Called every frame from animation loop
+   */
+  update() {
+    if (!this.visualizer.camera) return;
+
+    // Check if there's any velocity to apply
+    const threshold = 0.0001;
+    const hasVelocity =
+      this.rotationVelocity.x * this.rotationVelocity.x > threshold * threshold ||
+      this.rotationVelocity.y * this.rotationVelocity.y > threshold * threshold;
+
+    if (!hasVelocity && !this.isDragging) {
+      return;  // Nothing to do
+    }
+
+    const camera = this.visualizer.camera;
+
+    // Convert quaternion to Euler for rotation
+    const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+    euler.setFromQuaternion(camera.quaternion);
+
+    if (this.enableDamping) {
+      // Apply a fraction of the velocity
+      euler.y += this.rotationVelocity.y * this.dampingFactor;
+      euler.x += this.rotationVelocity.x * this.dampingFactor;
+
+      // Decay the velocity
+      this.rotationVelocity.y *= (1 - this.dampingFactor);
+      this.rotationVelocity.x *= (1 - this.dampingFactor);
+
+      // Stop when velocity becomes negligible
+      if (Math.abs(this.rotationVelocity.y) < threshold) this.rotationVelocity.y = 0;
+      if (Math.abs(this.rotationVelocity.x) < threshold) this.rotationVelocity.x = 0;
+    } else {
+      // No damping: apply full velocity and stop
+      euler.y += this.rotationVelocity.y;
+      euler.x += this.rotationVelocity.x;
+      this.rotationVelocity = { x: 0, y: 0 };
+    }
+
+    // Clamp pitch to ±89°
+    euler.x = Math.max(
+      _PI_2 - this.maxPolarAngle,
+      Math.min(_PI_2 - this.minPolarAngle, euler.x)
+    );
+
+    // Zero pitch velocity if we hit the limit
+    if (euler.x === (_PI_2 - this.maxPolarAngle) ||
+        euler.x === (_PI_2 - this.minPolarAngle)) {
+      this.rotationVelocity.x = 0;
+    }
+
+    // Convert back to quaternion
+    camera.quaternion.setFromEuler(euler);
   }
 
   resetView() {
@@ -546,6 +611,8 @@ export class MobileControls {
   }
 
   destroy() {
+    this.rotationVelocity = { x: 0, y: 0 };
+    this.isDragging = false;
     if (this.container) {
       this.container.remove();
     }

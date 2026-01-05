@@ -9,6 +9,7 @@ import { PerformanceMonitor } from './utils/PerformanceMonitor.js';
 import { ViewpointManager } from './utils/ViewpointManager.js';
 import { DeviceDetector } from './utils/DeviceDetector.js';
 import { PlatformDetector } from './utils/PlatformDetector.js';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { FileSelector } from './ui/FileSelector.js';
 import { MobileControls } from './ui/MobileControls.js';
 import { getDataUrl } from './config/blobUrls.js';
@@ -574,6 +575,14 @@ class LiDARVisualizer {
       overlay.classList.add('hidden');
       setTimeout(() => overlay.style.display = 'none', 500);
     }
+
+    // Hide native splash screen if running in Capacitor
+    if (this.isNativeApp) {
+      setTimeout(() => {
+        SplashScreen.hide();
+        console.log('Splash screen hidden');
+      }, 500);
+    }
   }
 
   showError(message) {
@@ -788,6 +797,10 @@ class LiDARVisualizer {
     // Update movement for FPS controls
     if (this.controlMode === 'fps') {
       this.updateMovement();
+      // Update mobile controls for momentum/damping
+      if (this.mobileControls) {
+        this.mobileControls.update();
+      }
     } else if (this.controlMode === 'orbit') {
       this.orbitControls.update();
     }
