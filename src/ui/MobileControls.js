@@ -11,14 +11,8 @@ export class MobileControls {
   constructor(visualizer) {
     this.visualizer = visualizer;
     this.container = null;
-    this.joystick = null;
-    this.joystickActive = false;
-    this.joystickCenter = { x: 0, y: 0 };
-    this.joystickOffset = { x: 0, y: 0 };
     this.touchStartPos = { x: 0, y: 0 };
-    this.rotationActive = false;
     this.lastTouchDistance = 0;
-    this.isControlsVisible = false;
     this.isPinching = false;  // Track pinch gesture state
 
     // Pitch clamping configuration (matches desktop FPS)
@@ -57,42 +51,6 @@ export class MobileControls {
     this.container.appendChild(fabGroup);
   }
 
-  createVirtualJoystick() {
-    const joystickContainer = document.createElement('div');
-    joystickContainer.className = 'virtual-joystick-container hidden';
-
-    const joystick = document.createElement('div');
-    joystick.className = 'virtual-joystick';
-
-    const base = document.createElement('div');
-    base.className = 'joystick-base';
-
-    const ring = document.createElement('div');
-    ring.className = 'joystick-ring';
-
-    const center = document.createElement('div');
-    center.className = 'joystick-center';
-
-    const stick = document.createElement('div');
-    stick.className = 'joystick-stick';
-
-    base.appendChild(ring);
-    base.appendChild(center);
-    joystick.appendChild(base);
-    joystick.appendChild(stick);
-
-    const hint = document.createElement('div');
-    hint.className = 'joystick-hint';
-    const hintText = document.createElement('span');
-    hintText.textContent = 'Drag to move camera';
-    hint.appendChild(hintText);
-
-    joystickContainer.appendChild(joystick);
-    joystickContainer.appendChild(hint);
-
-    this.container.appendChild(joystickContainer);
-    this.joystick = joystickContainer;
-  }
 
   createButton(className, action, title) {
     const btn = document.createElement('button');
@@ -307,9 +265,6 @@ export class MobileControls {
         this.resetView();
         this.showFeedback('View Reset');
         break;
-      case 'toggle-controls':
-        this.toggleControlPanel();
-        break;
     }
   }
 
@@ -335,23 +290,6 @@ export class MobileControls {
     }
   }
 
-  toggleJoystick() {
-    this.isControlsVisible = !this.isControlsVisible;
-    if (this.isControlsVisible) {
-      this.joystick.classList.remove('hidden');
-      this.showFeedback('Joystick Active');
-    } else {
-      this.joystick.classList.add('hidden');
-    }
-  }
-
-  toggleControlPanel() {
-    const panel = document.querySelector('.control-panel');
-    if (panel) {
-      panel.classList.toggle('expanded');
-    }
-  }
-
   showColorModeMenu() {
     this.showQuickMenu('Color Modes', [
       { label: 'Elevation', action: () => this.visualizer.pointCloudViewer?.setColorMode('elevation') },
@@ -374,18 +312,18 @@ export class MobileControls {
 
   showPathsMenu() {
     const pathsObject = this.visualizer.pathManager?.getAllPaths() || {};
-    const paths = Object.values(pathsObject);
+    // Use Object.entries to get both the ID (key) and the path object (value)
+    const pathEntries = Object.entries(pathsObject);
 
-    if (paths.length === 0) {
+    if (pathEntries.length === 0) {
       this.showFeedback('No camera paths available');
       return;
     }
 
-    const items = paths.map(path => ({
+    const items = pathEntries.map(([pathId, path]) => ({
       label: path.name,
       action: () => {
-        // Play the path immediately when selected
-        this.visualizer.pathAnimator?.playPath(path.id);
+        this.visualizer.pathAnimator?.playPath(pathId);
         this.showFeedback(`Playing: ${path.name}`);
       }
     }));
@@ -500,79 +438,6 @@ export class MobileControls {
     }, 2000);
   }
 
-  // Virtual Joystick Handlers
-  onJoystickStart(e) {
-    e.preventDefault();
-    this.joystickActive = true;
-    const stick = e.currentTarget;
-    const base = stick.parentElement;
-    const rect = base.getBoundingClientRect();
-    this.joystickCenter = {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2
-    };
-  }
-
-  onJoystickMove(e) {
-    if (!this.joystickActive) return;
-    e.preventDefault();
-
-    const touch = e.touches[0];
-    const dx = touch.clientX - this.joystickCenter.x;
-    const dy = touch.clientY - this.joystickCenter.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const maxDistance = 50;
-
-    // Clamp to circle
-    const clampedDistance = Math.min(distance, maxDistance);
-    const angle = Math.atan2(dy, dx);
-    const clampedX = Math.cos(angle) * clampedDistance;
-    const clampedY = Math.sin(angle) * clampedDistance;
-
-    // Update stick position
-    const stick = e.currentTarget;
-    stick.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
-
-    // Normalize to -1 to 1
-    this.joystickOffset = {
-      x: clampedX / maxDistance,
-      y: clampedY / maxDistance
-    };
-
-    // Apply to camera movement
-    this.updateCameraFromJoystick();
-  }
-
-  onJoystickEnd(e) {
-    e.preventDefault();
-    this.joystickActive = false;
-    const stick = e.currentTarget;
-    stick.style.transform = 'translate(0, 0)';
-    this.joystickOffset = { x: 0, y: 0 };
-  }
-
-  updateCameraFromJoystick() {
-    if (!this.visualizer.camera || !this.visualizer.controls) return;
-
-    const speed = 5;
-    const camera = this.visualizer.camera;
-    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-
-    // Move forward/back based on Y axis
-    forward.multiplyScalar(-this.joystickOffset.y * speed);
-    // Move left/right based on X axis
-    right.multiplyScalar(this.joystickOffset.x * speed);
-
-    camera.position.add(forward);
-    camera.position.add(right);
-
-    // Update orbit controls target
-    if (this.visualizer.controls.target) {
-      this.visualizer.controls.target.copy(camera.position);
-    }
-  }
-
   // Canvas Touch Handlers
   onCanvasTouchStart(e) {
     // Don't capture touches that start on UI elements
@@ -621,9 +486,9 @@ export class MobileControls {
         const euler = new THREE.Euler(0, 0, 0, 'YXZ');
         euler.setFromQuaternion(camera.quaternion);
 
-        // Apply rotations to Euler angles
-        euler.y -= deltaX * rotationSpeed;  // Yaw (unlimited)
-        euler.x -= deltaY * rotationSpeed;  // Pitch (will be clamped)
+        // Apply rotations to Euler angles (inverted: swipe right = look left, swipe down = look up)
+        euler.y += deltaX * rotationSpeed;  // Yaw (unlimited) - inverted
+        euler.x += deltaY * rotationSpeed;  // Pitch (will be clamped) - inverted
 
         // Clamp pitch to ±89° (matches PointerLockControls behavior)
         euler.x = Math.max(

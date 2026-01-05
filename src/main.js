@@ -8,6 +8,7 @@ import { ControlPanel } from './ui/ControlPanel.js';
 import { PerformanceMonitor } from './utils/PerformanceMonitor.js';
 import { ViewpointManager } from './utils/ViewpointManager.js';
 import { DeviceDetector } from './utils/DeviceDetector.js';
+import { PlatformDetector } from './utils/PlatformDetector.js';
 import { FileSelector } from './ui/FileSelector.js';
 import { MobileControls } from './ui/MobileControls.js';
 import { getDataUrl } from './config/blobUrls.js';
@@ -42,7 +43,8 @@ class LiDARVisualizer {
     this.pointCloudBounds = null;
     this.orbitCenterIndicator = null;
 
-    // Mobile detection and performance profiling
+    // Platform and device detection
+    this.isNativeApp = PlatformDetector.isNative();
     this.deviceDetector = new DeviceDetector();
     this.isMobile = this.deviceDetector.isMobile();
     this.performanceProfile = this.deviceDetector.getPerformanceProfile();
@@ -50,13 +52,19 @@ class LiDARVisualizer {
     this.fileSelector = null;
     this.mobileControls = null;  // Mobile navigation controls
 
-    // Log device info for debugging
+    // Log device and platform info for debugging
+    PlatformDetector.logPlatformInfo();
     this.deviceDetector.logDeviceInfo();
 
-    // Initialize based on device type
-    if (this.isMobile) {
+    // Initialize based on platform and device type
+    if (this.isNativeApp) {
+      // Native app: Auto-load files (bypass file selector)
+      this.initNative();
+    } else if (this.isMobile) {
+      // Mobile web: Show file selector
       this.initMobile();
     } else {
+      // Desktop web: Auto-load all files
       this.init();
     }
   }
@@ -110,6 +118,67 @@ class LiDARVisualizer {
     } catch (error) {
       console.error('Mobile initialization failed:', error);
       this.showError('Failed to initialize mobile viewer');
+    }
+  }
+
+  /**
+   * Native app initialization - auto-loads files, bypasses file selector
+   */
+  async initNative() {
+    console.log('🚀 Initializing native app...');
+
+    // Phase 1: Setup scene
+    this.setupScene();
+    this.setupCamera();
+    this.setupRenderer();
+    this.setupControls();
+    this.setupPointCloudViewer();
+    this.setupCameraPathSystem();
+    this.setupViewpointSystem();
+
+    // Phase 2: Auto-load files (for now, load Stanley Park from cloud)
+    // TODO: Load from bundled files in Phase 2b
+    const filesToLoad = [
+      'bc_dsm_v12.laz'  // Stanley Park - 90MB
+    ];
+
+    console.log(`Loading ${filesToLoad.length} files for native app...`);
+
+    try {
+      const urls = [];
+      for (const filename of filesToLoad) {
+        const url = await getDataUrl(filename);
+        urls.push(url);
+      }
+
+      await this.pointCloudViewer.load(urls, (progress, fileNum, totalFiles, currentFile) => {
+        this.updateLoadingProgress(progress, fileNum, totalFiles, currentFile);
+      }).then((result) => {
+        this.hideLoadingOverlay();
+
+        const bounds = result.bounds || result;
+        this.centerCameraOnPointCloud(bounds);
+        this.pathManager.initializePaths(bounds);
+
+        // Refresh control panel to show camera paths
+        if (this.controlPanel) {
+          this.controlPanel.refreshCameraPaths();
+        }
+
+        console.log('✅ Native app loaded successfully!');
+      });
+
+      // Phase 3: Complete initialization
+      this.setupUI();
+      this.setupMobileControls();  // Native apps use mobile touch controls
+      this.setupPerformanceMonitor();
+      this.setupEventListeners();
+      this.setupOrbitCenterControl();
+      this.animate();
+
+    } catch (error) {
+      console.error('Native app initialization failed:', error);
+      this.showError('Failed to load point cloud data');
     }
   }
 

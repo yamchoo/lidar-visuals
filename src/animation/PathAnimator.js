@@ -23,9 +23,6 @@ export class PathAnimator {
       return;
     }
 
-    console.log(`Starting camera path: ${pathId}`, path);
-    console.log('Current camera position:', this.camera.position);
-
     // Store current control mode and switch to orbit (needed for target property)
     this.previousControlMode = this.visualizer.controlMode;
     if (this.previousControlMode === 'fps') {
@@ -37,11 +34,8 @@ export class PathAnimator {
     // On mobile, orbit controls are disabled by default - we need to enable them temporarily
     this.wasOrbitDisabled = !controls.enabled;
     if (this.wasOrbitDisabled) {
-      console.log('Temporarily enabling orbit controls for path animation (mobile)');
       controls.enabled = true;
     }
-
-    console.log('Current camera target:', controls.target);
 
     this.currentPath = pathId;
     this.isPlaying = true;
@@ -89,26 +83,17 @@ export class PathAnimator {
           targetZ: keyframe.target.z
         }, keyframe.duration)
         .easing(this.getEasingFunction(keyframe.easing))
-        .onStart(() => {
-          console.log(`✓ Starting keyframe ${index}:`, keyframe.position);
-        })
         .onUpdate((coords) => {
           this.camera.position.set(coords.camX, coords.camY, coords.camZ);
           controls.target.set(coords.targetX, coords.targetY, coords.targetZ);
-        })
-        .onComplete(() => {
-          console.log(`✓ Completed keyframe ${index}`);
         });
 
       this.activeTweens.push(tween);
 
       if (previousTween) {
-        console.log(`Chaining keyframe ${index} to previous`);
         previousTween.chain(tween);
       } else {
-        console.log(`Starting first tween (keyframe ${index})`);
-        const started = tween.start();
-        console.log('Tween start returned:', started);
+        tween.start();
       }
 
       if (index === keyframes.length - 1) {
