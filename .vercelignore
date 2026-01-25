@@ -1,3 +1,8 @@
 # Exclude LIDAR data files - hosted on Cloudflare R2
 public/data
 public/data/**
+
+# Exclude native app directories (not needed for web deployment)
+ios/
+android/
+nyc-data/
