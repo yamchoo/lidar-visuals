@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     scrollEnabled: false,  // Disable web view scrolling for better 3D controls
-    limitsNavigationsToAppBoundDomains: true
+    limitsNavigationsToAppBoundDomains: false  // Allow loading external LIDAR data
   },
   android: {
     backgroundColor: '#000000',
